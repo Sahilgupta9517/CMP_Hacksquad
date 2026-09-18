@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Sparkles, 
   CheckCircle2, 
@@ -9,23 +10,26 @@ import {
   Layers, 
   Eye, 
   X, 
-  ChevronRight,
-  TrendingUp,
-  ShieldCheck,
-  AlertCircle
+  ChevronRight, 
+  TrendingUp, 
+  ShieldCheck, 
+  AlertCircle 
 } from 'lucide-react';
 import { RECOMMENDATIONS_DATA } from '../data/mockData';
 import { TRANSLATIONS } from '../utils/translations';
 
 export default function Recommendations({ currentLanguage = 'English' }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const districtParam = searchParams.get('district');
   const t = TRANSLATIONS[currentLanguage]?.reco || TRANSLATIONS['English'].reco;
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [filterCategory, setFilterCategory] = useState('All');
 
   const filteredProjects = RECOMMENDATIONS_DATA.filter((p) => {
-    if (filterCategory === 'All') return true;
-    return p.category.toLowerCase().includes(filterCategory.toLowerCase());
+    const matchesCategory = filterCategory === 'All' || p.category.toLowerCase().includes(filterCategory.toLowerCase());
+    const matchesDistrict = !districtParam || p.district.toLowerCase().includes(districtParam.toLowerCase());
+    return matchesCategory && matchesDistrict;
   });
 
   return (
@@ -63,6 +67,26 @@ export default function Recommendations({ currentLanguage = 'English' }) {
           ))}
         </div>
       </div>
+
+      {/* Active District Banner if present */}
+      {districtParam && (
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-xs">
+          <div className="flex items-center space-x-2">
+            <MapPin className="w-4 h-4 text-blue-600" />
+            <span className="text-slate-700">
+              Showing AI recommendations for <strong className="text-blue-900">{districtParam} District</strong>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSearchParams({})}
+            className="text-xs text-rose-600 font-bold hover:underline flex items-center space-x-1"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Show All Districts</span>
+          </button>
+        </div>
+      )}
 
       {/* Projects List */}
       <div className="space-y-5">
