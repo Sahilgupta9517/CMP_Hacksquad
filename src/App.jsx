@@ -24,7 +24,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="dpi-ambient-bg bg-dpi-grid relative min-h-screen text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden">
+
+      {/* Floating Animated Ambient Glow Orbs */}
+      <div className="orb-glow-cyan top-[-100px] left-[-100px]"></div>
+      <div className="orb-glow-indigo top-[30%] right-[-150px]"></div>
+      <div className="orb-glow-rose bottom-[10%] left-[20%]"></div>
 
       {/* Shared Global Navbar */}
       <Navbar
@@ -34,7 +39,7 @@ export default function App() {
       />
 
       {/* Route-Based Page Content */}
-      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8">
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 relative z-10">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route
