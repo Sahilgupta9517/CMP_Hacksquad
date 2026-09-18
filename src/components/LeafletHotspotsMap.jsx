@@ -13,7 +13,7 @@ export default function LeafletHotspotsMap({
   const mapInstanceRef = useRef(null);
   const markersRef = useRef({});
 
-  // Initialize Leaflet Map
+  // Initialize Leaflet Map without any API Key
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -27,15 +27,31 @@ export default function LeafletHotspotsMap({
         attributionControl: false
       });
 
-      // Add CartoDB Dark Matter tile layer for DPI theme
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Primary Tile Layer: CartoDB Dark Matter (Free, Open, No API Key Required)
+      const primaryTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         subdomains: 'abcd',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-      }).addTo(map);
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      });
+
+      // Fallback Tile Layer: OpenStreetMap Standard (Free, Open, No API Key Required)
+      const fallbackTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      });
+
+      // Handle tile load errors gracefully
+      primaryTiles.on('tileerror', () => {
+        if (!map.hasLayer(fallbackTiles)) {
+          map.removeLayer(primaryTiles);
+          fallbackTiles.addTo(map);
+        }
+      });
+
+      primaryTiles.addTo(map);
 
       // Custom Attribution Control
-      L.control.attribution({ position: 'bottomright', prefix: 'JanConnect AI GIS Network' }).addTo(map);
+      L.control.attribution({ position: 'bottomright', prefix: 'JanConnect AI Free Open-GIS Network' }).addTo(map);
 
       mapInstanceRef.current = map;
     }
@@ -48,7 +64,7 @@ export default function LeafletHotspotsMap({
     });
     markersRef.current = {};
 
-    // Add markers for hotspots
+    // Add interactive markers for hotspots
     hotspots.forEach((dist) => {
       if (!dist.lat || !dist.lng) return;
 
@@ -64,14 +80,6 @@ export default function LeafletHotspotsMap({
         : isEmerging
         ? 'bg-amber-400 text-slate-950'
         : 'bg-blue-600 text-white';
-
-      const borderColorHex = isCritical
-        ? '#EF4444'
-        : isHigh
-        ? '#F97316'
-        : isEmerging
-        ? '#F59E0B'
-        : '#2563EB';
 
       // Create Custom HTML Pin Icon
       const customIcon = L.divIcon({
@@ -99,7 +107,7 @@ export default function LeafletHotspotsMap({
 
       const marker = L.marker([Number(dist.lat), Number(dist.lng)], { icon: customIcon }).addTo(map);
 
-      // Tooltip / Popup content
+      // Interactive Tooltip
       marker.bindTooltip(
         `<div class="p-1 text-xs space-y-0.5">
           <strong class="text-slate-900 block font-heading">${dist.name}, ${dist.state}</strong>
@@ -109,7 +117,7 @@ export default function LeafletHotspotsMap({
         { direction: 'top', offset: [0, -20], opacity: 0.95 }
       );
 
-      // Click event
+      // Marker click listener
       marker.on('click', () => {
         onSelectDistrict(dist);
         map.flyTo([Number(dist.lat), Number(dist.lng)], 7, { duration: 1 });
